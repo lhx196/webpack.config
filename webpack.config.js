@@ -1,13 +1,14 @@
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin")
 module.exports = {
   // 打包模式 none --不加任何优化 production --启用多个优化插件，混淆压缩等 --development测试环境 打包不会混淆压缩
-  mode:'development',
+  mode: 'development',
 
   // 上下文 项目打包的相对路径 必须是绝对路径
   // context:process.cwd(),
 
-  //  source Map生成 使调试更加容易，建议只在开发测试环境使用
+  //  source Map生成 使调试更加容易，建议只在开发测试环境使用  开发环境默认开启
   devtool: "eval-source-map",
   //入口文件
   // 单入口文件
@@ -31,12 +32,14 @@ module.exports = {
   },
 
   devServer: {
-    contentBase: "./public", //本地服务器所加载的页面所在的目录
+    contentBase: "./build", //本地服务器所加载的页面所在的目录,目录下为空，页面都放到内存中
     historyApiFallback: true, //不跳转
-    inline: true //实时刷新
+    inline: true, //实时刷新，
+    open: true //服务器启动后是否某人打开浏览器
   },
   // loader 执行顺需是从后往前的
-  // 处理不认识模块，webpack默认只支持js及json，遇到css less ts等需要对应loader进行解析
+  // 处理webpack不支持模块，webpack默认只支持js及json，遇到css less ts等需要对应loader进行解析
+  // 一个loader只处理一件事情 loader有执行顺序
   module: {
     rules: [
       //复杂的配置可提出相关部分，生成.babelrc配置文件中，webpack会自动调用里面的配置项
@@ -49,7 +52,22 @@ module.exports = {
       },
       {
         test: /\.less$/, // 文件筛选正则
-        use: ["style-loader","css-loader","less-loader"],
+        use: [
+          "style-loader",
+          {
+            loader: "css-loader",
+            options: {
+              // css模块化启用
+              modules: true
+            }
+          },
+          {
+            // 本地新建postcss.config.js会读取内部配置
+            // 在css-loader之前
+            loader: 'postcss-loader'
+          },
+          "less-loader"
+        ],
         exclude: /node_modules/ //不编译的目录
       },
       {
@@ -79,15 +97,36 @@ module.exports = {
             }
           }
         ]
-      }
+      },
+      // 文件处理
+      {
+        //  ? e可有可无 jpg jpeg兼容
+        test: /\.(png|jpe?g|gif)$/,
+        use: {
+          loader: "url-loader",
+          // loader: "file-loader", 
+          // url-loader包含file-loader 推荐使用url-loader 因为url-loader支持limit：单位字节 当图片小于limit字节时，图片转换base64 打包到bundle内部
+          // 小体积图片资源转成base64
+          options: {
+            // ext 后缀名
+            name: "[name]_[hash:6].[ext]",
+            outputPath: 'images/'
+          }
+        },
+      },
     ]
   },
   // 插件 插件执行与打包声明周期挂钩
-  // plugins: [
-  //   new HtmlWebpackPlugin({
-  //     template: __dirname + "/app/index.tmpl.html" //new 一个这个插件的实例，并传入相关的参数
-  //   })
-  // ],
+  plugins: [
+    // 打包前动态清空打包文件夹文件
+    new CleanWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      // HtmlWebpackPlugin默认支持ejs语法 可替换html文件内容
+      // <title><%= htmlWebpackPlugin.options.title %></title>
+      title: "首页",
+      template: __dirname + "/app/index.html" //new 一个这个插件的实例，并传入相关的参数
+    })
+  ],
   /**
    * chunks：表示从哪些chunks里面抽取代码，除了三个可选字符串值 initial、async、all 之外，还可以通过函数来过滤所需的 chunks；
    * minSize：表示抽取出来的文件在压缩前的最小大小，默认为 30000；
