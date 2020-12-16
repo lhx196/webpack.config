@@ -9,6 +9,7 @@ webpack基础配置配置
 - build - 打包存放文件夹
 - public - 代理文件夹
 - webpack.config.js - webpack配置文件
+- reactapp 打包react测试目录
 
 <summary>webpack.config配置</summary>
 
