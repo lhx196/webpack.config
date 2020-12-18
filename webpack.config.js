@@ -1,6 +1,7 @@
 const webpack = require("webpack");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin")
+
 module.exports = {
   // 打包模式 none --不加任何优化 production --启用多个优化插件，混淆压缩等 --development测试环境 打包不会混淆压缩
   mode: 'development',
@@ -27,15 +28,37 @@ module.exports = {
     /**
      * 占位符
      * hash 整个项目的hash指，每构建一次就会有一个新的hash产生 打包日志会输出  ：number取hash后number为数字
-     * chunkhash 根据不同入口entry进行依赖解析，构建对应chunkhash，只要组成entry的模块内容没有改动，则对应hash不变
+     * chunkhash 根据不同入口entry进行依赖解析，构建对应chunkhash，只要组成entry的js模块内容没有改动，则对应hash不变
+     * contenthash css单独分包时，js引入css模块时，当前js若发生修改，而css内容没修改时，chunkhash依旧会发生变化，contenthash不变
      */
   },
 
   devServer: {
     contentBase: "./build", //本地服务器所加载的页面所在的目录,目录下为空，页面都放到内存中
-    historyApiFallback: true, //不跳转
-    inline: true, //实时刷新，
-    open: true //服务器启动后是否某人打开浏览器
+    // historyApiFallback: true, //不跳转
+    // inline: true, //实时刷新，
+    open: true, //服务器启动后是否某人打开浏览器
+    hot: true,
+    // 即便hmr没有生效，浏览器也不会自动刷新
+    hotOnly:true,
+    // 代理
+    proxy: {
+      "/api": {
+        target: 'http://localhost:9092'
+      }
+    },
+    // mock server
+    // 钩子 加载webpack dev server中间件hook
+    before(app, server) {
+      // mock数据
+      app.get("/api/info", (req, res) => {
+        res.json({
+          hello: 'express'
+        })
+      })
+    },
+    // after() { },
+    port: 8080
   },
   // loader 执行顺需是从后往前的
   // 处理webpack不支持模块，webpack默认只支持js及json，遇到css less ts等需要对应loader进行解析
@@ -46,7 +69,10 @@ module.exports = {
       {
         test: /(\.jsx|\.js)$/, // 文件筛选正则
         use: {
-          loader: "babel-loader" //loader库
+          loader: "babel-loader", //loader库
+          options: {
+            presets:["@babel/preset-env"]
+          }
         },
         exclude: /node_modules/ //不编译的目录
       },
@@ -125,7 +151,9 @@ module.exports = {
       // <title><%= htmlWebpackPlugin.options.title %></title>
       title: "首页",
       template: __dirname + "/app/index.html" //new 一个这个插件的实例，并传入相关的参数
-    })
+    }),
+    // webpack热更新模块，修改代码时，页面保持之前所进行过的操作，配合dev server中 hot与hotOnly使用
+    new webpack.HotModuleReplacementPlugin(),
   ],
   /**
    * chunks：表示从哪些chunks里面抽取代码，除了三个可选字符串值 initial、async、all 之外，还可以通过函数来过滤所需的 chunks；
