@@ -132,6 +132,20 @@ module.exports = {
 
 ```
 
-## Last
-网上许多webpack的配置方案有时会因为版本差异而导致失败，因此一切以官方文档为准！！！
-除了以上配置功能外，像typescript，less，pxtorem等等常用配置也不一一详写，后续本人也会在空余时间继续深入了解，继续更新
+## 优化方案
+1、缩小loader查找范围(include,exclude)
+2、优化resolve.modules配置
+  用于配置webpack去拿些目录下寻找第三方模块，默认node_modules中查找
+  默认查询机制当前根目录下node_modules去寻找，若找不到会去上一级寻找(../node_modules),因此可以设定只在当前目录寻找，取消向上寻找机制
+3、优化resolve.alias配置
+  resolve.alias配置通过别名来将原导入路径映射成一个新的导入路径
+  eg：react:./node_modules/react/umd/react.production.min.js 减少从模块包index入口查找过程
+4、优化resolve.extensions配置
+  resolve.extensions在导入语句没带文件后缀时，webpack会自动带上后缀后，去尝试查找文件是否存在
+  在导入时尽量带后缀
+5、使用externals优化cdn静态资源
+  将一些js文件存储到cdn上（减少webpack打包体积），在index上通过标签引入
+
+## ps
+webpack的配置方法，具体以官方为主，某些插件及loader可到github上搜寻相关配置参数
+配置babel时要注意，babel的每个包大版本必须保持一致，其中某个包跨版本可能会导致打包失败
