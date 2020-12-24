@@ -40,7 +40,7 @@ module.exports = {
     open: true, //服务器启动后是否某人打开浏览器
     hot: true,
     // 即便hmr没有生效，浏览器也不会自动刷新
-    hotOnly:true,
+    hotOnly: true,
     // 代理
     proxy: {
       "/api": {
@@ -71,7 +71,7 @@ module.exports = {
         use: {
           loader: "babel-loader", //loader库
           options: {
-            presets:["@babel/preset-env"]
+            presets: ["@babel/preset-env"]
           }
         },
         exclude: /node_modules/ //不编译的目录
@@ -161,47 +161,69 @@ module.exports = {
    * maxSize：表示抽取出来的文件在压缩前的最大大小，默认为 0，表示不限制最大大小；
    * minChunks：表示被引用次数，默认为1；上述配置commons中minChunks为2，表示将被多次引用的代码抽离成commons。
    */
-  // optimization: {
-  //   splitChunks: {
-  //     /**
-  //       async 仅提取按需载入的module
-  //       initial 仅提取同步载入的module
-  //       all 按需、同步都有提取
-  //     */
-  //     chunks: "all",
-  //     // 只有导入的模块 大于 该值 才会 做代码分割 （单位字节）
-  //     minSize: 30000,
-  //     // 提取出的新chunk在两次压缩之前要小于多少kb，默认为0，即不做限制
-  //     maxSize: 0,
-  //     // 被提取的chunk最少需要被多少chunks共同引入
-  //     minChunks: 1,
-  //     // 按需加载的代码块（vendor-chunk）并行请求的数量小于或等于5个
-  //     maxAsyncRequests: 5,
-  //     // 初始加载的代码块，并行请求的数量小于或者等于3个
-  //     maxInitialRequests: 3,
-  //     // 默认命名 连接符
-  //     automaticNameDelimiter: "~",
-  //     /**
-  //         name 为true时，分割文件名为 [缓存组名][连接符][入口文件名].js
-  //         name 为false时，分割文件名为 [模块id][连接符][入口文件名].js
-  //         如果 缓存组存在 name 属性时 以缓存组的name属性为准
-  //     */
-  //     name: true,
-  //     cacheGroups: {
-  //       vendors: {
-  //         test: /[\\/]node_modules[\\/]/, // 匹配node_modules目录下的文件
-  //         priority: -10 // 优先级配置项
-  //       },
-  //       default: {
-  //         // 表示这个库 至少被多少个chunks引入，
-  //         minChunks: 2,
-  //         priority: -20, // 优先级配置项
-  //         // 如果这个模块已经 被分到 vendors组，这里无需在分割 直接引用 分割后的
-  //         reuseExistingChunk: true
-  //       }
-  //     }
-  //   }
-  // }
+  optimization: {
+    splitChunks: {
+      /**
+        async 仅提取按需载入的module
+        initial 仅提取同步载入的module
+        all 按需、同步都有提取
+      */
+      chunks: "all",
+      // 只有导入的模块 大于 该值 才会 做代码分割 （单位字节）
+      minSize: 30000,
+      // 提取出的新chunk在两次压缩之前要小于多少kb，默认为0，即不做限制
+      // 对模块进行二次分割时使用，不推荐使用
+      maxSize: 0,
+      // 被提取的chunk最少需要被多少chunks共同引入
+      minChunks: 1,
+      // 按需加载的代码块（vendor-chunk）并行请求的数量小于或等于5个
+      maxAsyncRequests: 5,
+      // 初始加载的代码块，并行请求的数量小于或者等于3个
+      maxInitialRequests: 3,
+      // 默认命名 连接符
+      automaticNameDelimiter: "~",
+      /**
+          name 为true时，分割文件名为 [缓存组名][连接符][入口文件名].js
+          name 为false时，分割文件名为 [模块id][连接符][入口文件名].js
+          如果 缓存组存在 name 属性时 以缓存组的name属性为准
+      */
+      name: true,
+      // 缓存组 按小组设置分割多代码打包文件
+      cacheGroups: {
+        vendors: {
+          test: /[\\/]node_modules[\\/]/, // 匹配node_modules目录下的文件
+          // 分割出来chunk名臣
+          name: "vendor",
+          priority: -10 // 缓存组优先级 即使越大，优先级越高 优先级配置项，如冲突时，优先级高的覆盖优先级低的
+        },
+        // 例如分割一些常用分割模块
+        loadsh: {
+          test: /loadsh/,
+          name: "loadsh"
+        },
+        react: {
+          test: /react|react-dom/,
+          name: "react"
+        },
+        // other: {
+        //   // 必须三选一 initial all async 默认是async
+        //   chunks: "initial",
+        //   // 正则校验，如果符合就提取chunk
+        //   test: /react|loadsh/,
+        //   minSize: 30000,
+        //   minChunks:1
+        // },
+        default: {
+          // 表示这个库 至少被多少个chunks引入，
+          minChunks: 2,
+          priority: -20, // 优先级配置项
+          // 如果这个模块已经 被分到 vendors组，这里无需在分割 直接引用 分割后的
+          // 氪设置是否重用chunks
+          reuseExistingChunk: true
+        }
+      }
+    }
+  }
 };
 
 //注意package里面babel的版本号，版本号差异会造成冲突。 解决办法:可进行babel升降级，修改package的版本号，并删除node_modules重新下载
