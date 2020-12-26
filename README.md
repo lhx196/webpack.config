@@ -101,6 +101,13 @@ webpack基础配置配置
     optimization中concatenateModules:true  
     优化bundle文件体积  
 
+  13、使用工具量化  
+    speed-measure-webpack-plugin:可以测量各个插件和loader所花费时间  
+    webpack-bundle-analyzer:分析webpack打包后的模块依赖关系,观察依赖体积等  
+
+  14、DllPlugin插件打包第三方类库 预先编译  
+    Dll动态链接库 其实就是做缓存，每次只打包开发业务代码,只会提升webpack打包速度，并不能减少最后生成代码的体积（提升开发体验）  
+
 ## ps
 webpack的配置方法，具体以官方为主，某些插件及loader可到github上搜寻相关配置参数  
 配置babel时要注意，babel的每个包大版本必须保持一致，其中某个包跨版本可能会导致打包失败
