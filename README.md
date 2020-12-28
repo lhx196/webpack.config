@@ -15,31 +15,31 @@ webpack基础配置配置及相关优化方案(持续更新)
 1、缩小loader查找范围(include,exclude)  
 
 2、优化resolve.modules配置  
-  用于配置webpack去拿些目录下寻找第三方模块，默认node_modules中查找  
-  默认查询机制当前根目录下node_modules去寻找，若找不到会去上一级寻找(../node_modules),因此可以设定只在当前目录寻找，取消向上寻找机制  
+&nbsp;&nbsp;用于配置webpack去拿些目录下寻找第三方模块，默认node_modules中查找  
+&nbsp;&nbsp;默认查询机制当前根目录下node_modules去寻找，若找不到会去上一级寻找(../node_modules),因此可以设定只在当前目录寻找，取消向上寻找机制  
 
 3、优化resolve.alias配置  
-  resolve.alias配置通过别名来将原导入路径映射成一个新的导入路径  
-  eg：react:./node_modules/react/umd/react.production.min.js 减少从模块包index入口查找过程  
+&nbsp;&nbsp;resolve.alias配置通过别名来将原导入路径映射成一个新的导入路径  
+&nbsp;&nbsp;eg：react:./node_modules/react/umd/react.production.min.js 减少从模块包index入口查找过程  
 
 4、优化resolve.extensions配置  
-  resolve.extensions在导入语句没带文件后缀时，webpack会自动带上后缀后，去尝试查找文件是否存在  
-  在导入时尽量带后缀  
+&nbsp;&nbsp;resolve.extensions在导入语句没带文件后缀时，webpack会自动带上后缀后，去尝试查找文件是否存在  
+&nbsp;&nbsp;在导入时尽量带后缀  
 
 5、使用externals优化cdn静态资源  
-  将一些js文件存储到cdn上（减少webpack打包体积），在index上通过标签引入  
+&nbsp;&nbsp;将一些js文件存储到cdn上（减少webpack打包体积），在index上通过标签引入  
 
 6、development/production模式区分打包:webpack可以共用配置、development、production配置可以分开多个文件编写，最后在开发和生产配置上通过webpack-merge合并，结合packjson命令行分别执行  
 
 7、采用css预处理器、借助MiniCssExtractPlugin、optimize-css-assets-webpack-plugin等工具包 抽离 压缩css等  
 
 8、tree Shaking(摇树)：清除无用的css、js  
-    -js 摇树支持是es module引入，不支持commonJs  
-    css摇树相关插件：glob-all（用于匹配路径规则下的所有文件） purify-css prifycss-webpack等  
-    js配置：optimizaion;{ usedExports:true }  // 内置模块不依赖第三方，哪些导出模块被使用了，再做打包  
+&nbsp;&nbsp;-js 摇树支持是es module引入，不支持commonJs  
+&nbsp;&nbsp;css摇树相关插件：glob-all（用于匹配路径规则下的所有文件） purify-css prifycss-webpack等  
+&nbsp;&nbsp;js配置：optimizaion;{ usedExports:true }  // 内置模块不依赖第三方，哪些导出模块被使用了，再做打包  
 
 9.sideEffects处理副作用  
-    packjson内的字段，值：string[]，数组内文件路径不进行摇树，例如b@abel/profill  
+&nbsp;&nbsp;packjson内的字段，值：string[]，数组内文件路径不进行摇树，例如b@abel/profill  
 
 10、代码分割 code Splitting（详情字段可看webpack.config.js）  
 
@@ -53,8 +53,8 @@ webpack基础配置配置及相关优化方案(持续更新)
 
     ```
   11、预取/预加载模块 prefetch/preload  
-    动态导入操作符是作为函数使用的。它接受一个字符串参数，返回一个Promise。当模块加载好后，这个Promise被resolve。  
-    在Webpack中使用动态导入，会新增一个chunk，我们视作异步chunk。  
+  &nbsp;&nbsp;动态导入操作符是作为函数使用的。它接受一个字符串参数，返回一个Promise。当模块加载好后，这个Promise被resolve。  
+  &nbsp;&nbsp;在Webpack中使用动态导入，会新增一个chunk，我们视作异步chunk。  
 
     ```javascript
     let fileName = ''; 
@@ -69,20 +69,20 @@ webpack基础配置配置及相关优化方案(持续更新)
       });
     });
     ```
-    以上代码在你的项目中被打包过后，你会发现Webpack在utilities文件夹下为每个模块单独创建了异步chunk。这是因为Webpack不能在编译时知道哪些模块需要被导入。  
-    使用在Webpack中使用魔法注释来使用附加参数。  
-    webpackExclude，它是一个正则表达式，用以匹配潜在的可被导入的文件。任何匹配到的文件都不会被打包进来。  
-    webpackInclude,使用它时，只有匹配了正则表达式的模块会被打包。  
+  &nbsp;&nbsp;以上代码在你的项目中被打包过后，你会发现Webpack在utilities文件夹下为每个模块单独创建了异步chunk。这是因为Webpack不能在编译时知道哪些模块需要被导入。  
+  &nbsp;&nbsp;使用在Webpack中使用魔法注释来使用附加参数。  
+  &nbsp;&nbsp;webpackExclude，它是一个正则表达式，用以匹配潜在的可被导入的文件。任何匹配到的文件都不会被打包进来。  
+  &nbsp;&nbsp;webpackInclude,使用它时，只有匹配了正则表达式的模块会被打包。  
 
-    webpackMode  
-      lazy - 这是默认模式。它为每个动态导入的模块创建异步chunk。  
-      lazy-once - 使用它，会为满足导入条件的所有模块创建单一的异步chunk。  
-      eager - 此模式会阻止Webpack生成额外的chunk。所有导入的模块被包含在当前chunk，所以不需要再发额外的网络请求。它仍然返回一个Promise，但它被自动resolve。使用eager模式的动态导入与静态导入的区别在于，整个模块只有当**import()**掉用之后才执行。  
-      weak - 彻底阻止额外的网络请求。只有当该模块已在其他地方被加载过了之后，Promise才被resolve，否则直接被reject。  
+  &nbsp;&nbsp;webpackMode  
+      &nbsp;&nbsp;&nbsp;&nbsp;lazy - 这是默认模式。它为每个动态导入的模块创建异步chunk。  
+      &nbsp;&nbsp;&nbsp;&nbsp;lazy-once - 使用它，会为满足导入条件的所有模块创建单一的异步chunk。  
+      &nbsp;&nbsp;&nbsp;&nbsp;eager - 此模式会阻止Webpack生成额外的chunk。所有导入的模块被包含在当前chunk，所以不需要再发额外的网络请求。它仍然返回一个Promise，但它被自动resolve。使用&nbsp;&nbsp;&nbsp;&nbsp;eager模式的动态导入与静态导入的区别在于，整个模块只有当**import()**掉用之后才执行。  
+      &nbsp;&nbsp;&nbsp;&nbsp;weak - 彻底阻止额外的网络请求。只有当该模块已在其他地方被加载过了之后，Promise才被resolve，否则直接被reject。  
 
-    webpackChunkName  
-      它是新chunk的名字，可以和[index]、[request]变量一起使用。  
-      [index]在当前动态导入声明中表示文件的索引。另一方面，[request]表示导入文件的动态部分。  
+  &nbsp;&nbsp;webpackChunkName  
+      &nbsp;&nbsp;&nbsp;&nbsp;它是新chunk的名字，可以和[index]、[request]变量一起使用。  
+      &nbsp;&nbsp;&nbsp;&nbsp;[index]在当前动态导入声明中表示文件的索引。另一方面，[request]表示导入文件的动态部分。  
     ```javascript
       
       import(
@@ -129,7 +129,7 @@ webpack基础配置配置及相关优化方案(持续更新)
   15、HardSourceWebpackPlugin(webpack5)  
     提供中间缓存的作用。首次构建没有太大的变化。第二次构建时间会有较大节省  
 
-  16、使用happypack并发执行任务  
+  16、使用happypack并发执行任务(构建时间久，适用于项目复杂度高)  
     运行在node之上的webpack是单线程模型，webpack需要一个一个地处理任务不能同时处理多个。Happy Pack能将任务分给多个子进程去并发执行，子进程处理完后再将结果发给主进程。  
     ```javascript
       const happyThreadPool = HappyPack.ThreadPool({size:os.cpu.length}) // 设置开启进程数，可通过插件获取最大进程
@@ -140,6 +140,7 @@ webpack基础配置配置及相关优化方案(持续更新)
       <!-- plugin -->
       new HappyPack({id:"css",loaders:["style-loader","css-loader"]}) // 可new多个happypack处理 rule中多个loader的配置
     ```
+    不支持mini-css-extract-plugin  
 
 ## ps
 webpack的配置方法，具体以官方为主，某些插件及loader可到github上搜寻相关配置参数  
