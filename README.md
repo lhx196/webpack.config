@@ -1,5 +1,5 @@
 # webpack.config
-webpack基础配置配置
+webpack基础配置配置及相关优化方案(持续更新)
 
 # 前言
 在现有流行的脚手架搭建框架时，webpack等强大的工具往往都会被配置好以便快速开发。webpack的配置使用是前端一门必须掌握的技能，一个好的webpack配置不仅能加快开发速度，更能在打包生产后优化浏览器加载效率，因此本人也抽空重新学习了关于webpack基础配置，将此配置过程记录供之后参考。该配置为新手入门级别，更多更强大的配置请参考[webpack官方文档](https://webpack.js.org)
@@ -13,25 +13,34 @@ webpack基础配置配置
 
 ## 优化方案及注意事项
 1、缩小loader查找范围(include,exclude)  
+
 2、优化resolve.modules配置  
   用于配置webpack去拿些目录下寻找第三方模块，默认node_modules中查找  
   默认查询机制当前根目录下node_modules去寻找，若找不到会去上一级寻找(../node_modules),因此可以设定只在当前目录寻找，取消向上寻找机制  
+
 3、优化resolve.alias配置  
   resolve.alias配置通过别名来将原导入路径映射成一个新的导入路径  
   eg：react:./node_modules/react/umd/react.production.min.js 减少从模块包index入口查找过程  
+
 4、优化resolve.extensions配置  
   resolve.extensions在导入语句没带文件后缀时，webpack会自动带上后缀后，去尝试查找文件是否存在  
   在导入时尽量带后缀  
+
 5、使用externals优化cdn静态资源  
   将一些js文件存储到cdn上（减少webpack打包体积），在index上通过标签引入  
+
 6、development/production模式区分打包:webpack可以共用配置、development、production配置可以分开多个文件编写，最后在开发和生产配置上通过webpack-merge合并，结合packjson命令行分别执行  
+
 7、采用css预处理器、借助MiniCssExtractPlugin、optimize-css-assets-webpack-plugin等工具包 抽离 压缩css等  
+
 8、tree Shaking(摇树)：清除无用的css、js  
     -js 摇树支持是es module引入，不支持commonJs  
     css摇树相关插件：glob-all（用于匹配路径规则下的所有文件） purify-css prifycss-webpack等  
     js配置：optimizaion;{ usedExports:true }  // 内置模块不依赖第三方，哪些导出模块被使用了，再做打包  
+
 9.sideEffects处理副作用  
     packjson内的字段，值：string[]，数组内文件路径不进行摇树，例如b@abel/profill  
+
 10、代码分割 code Splitting（详情字段可看webpack.config.js）  
 
     ```javascript
@@ -105,8 +114,32 @@ webpack基础配置配置
     speed-measure-webpack-plugin:可以测量各个插件和loader所花费时间  
     webpack-bundle-analyzer:分析webpack打包后的模块依赖关系,观察依赖体积等  
 
-  14、DllPlugin插件打包第三方类库 预先编译  
+  14、DllPlugin插件打包第三方类库(webpack内置) 预先编译  
     Dll动态链接库 其实就是做缓存，每次只打包开发业务代码,只会提升webpack打包速度，并不能减少最后生成代码的体积（提升开发体验）  
+    其原理就是把网页依赖的基础模块抽离出来打包到dll文件中，当需要导入的模块存在于dll中时，这个模块不再被打包，而是从dll中去获取  
+    webpack已经内置对动态链接库的支持  
+    DllPlugin-用于打包出一个个单独的动态链接库文件  
+      通过配置webpack.config.dll.js单独打包出dll.js  
+      创建dll文件和manifest文件。dll文件就是就是我们需要引入的文件，manifest文件是引导webpack引入到当前项目的文件  
+    DllReferencePlugin-用于在主要的配置文件中引入DllPlugin插件打包好的动态链接库文件  
+      在项目打包阶段，可将打包出来的dll.js文件手动引入到index.html中(或用AddAssetHtmlPlugin等插件，插入到html模板中)  
+      使用CopyWebpackPlugin将dll库拷贝到打包目录  
+      避免缓存可在生成dll.js文件时添加hash命名  
+
+  15、HardSourceWebpackPlugin(webpack5)  
+    提供中间缓存的作用。首次构建没有太大的变化。第二次构建时间会有较大节省  
+
+  16、使用happypack并发执行任务  
+    运行在node之上的webpack是单线程模型，webpack需要一个一个地处理任务不能同时处理多个。Happy Pack能将任务分给多个子进程去并发执行，子进程处理完后再将结果发给主进程。  
+    ```javascript
+      const happyThreadPool = HappyPack.ThreadPool({size:os.cpu.length}) // 设置开启进程数，可通过插件获取最大进程
+
+      <!-- 在rule中修改loader引入 -->
+      use:[{loader:'happypack/loader?id=babel}] // id= 字段是通过自定义命名的与，plugin中添加的happypack配置id相呼应
+
+      <!-- plugin -->
+      new HappyPack({id:"css",loaders:["style-loader","css-loader"]}) // 可new多个happypack处理 rule中多个loader的配置
+    ```
 
 ## ps
 webpack的配置方法，具体以官方为主，某些插件及loader可到github上搜寻相关配置参数  
