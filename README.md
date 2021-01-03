@@ -5,7 +5,7 @@ webpack基础配置配置及相关优化方案(持续更新)
 在现有流行的脚手架搭建框架时，webpack等强大的工具往往都会被配置好以便快速开发。webpack的配置使用是前端一门必须掌握的技能，一个好的webpack配置不仅能加快开发速度，更能在打包生产后优化浏览器加载效率，因此本人也抽空重新学习了关于webpack基础配置，将此配置过程记录供之后参考。该配置为新手入门级别，更多更强大的配置请参考[webpack官方文档](https://webpack.js.org)
 
 ## webpack编译原理及简易实现
-- [webpack编译原理及简易实现](https://github.com/lhx196/-webpack-).
+- [webpack编译原理及简易实现：https://github.com/lhx196/-webpack-](https://github.com/lhx196/-webpack-).
 
 ## 目录结构
 - app - 需要打包的html、js、css、json等模板
